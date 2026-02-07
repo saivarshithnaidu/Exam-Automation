@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Job Application Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            padding: 40px;
+        }
+
+        form {
+            background: #ffffff;
+            padding: 25px;
+            max-width: 450px;
+            margin: auto;
+            border-radius: 8px;
+        }
+
+        input,
+        button {
+            width: 100%;
+            margin-top: 12px;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2 style="text-align:center;">Job Application</h2>
+
+    <form action="PASTE_YOUR_N8N_WEBHOOK_URL_HERE" method="POST" enctype="multipart/form-data">
+
+        <input type="text" name="name" placeholder="Full Name" required>
+
+        <input type="email" name="email" placeholder="Email Address" required>
+
+        <input type="text" name="phone" placeholder="Phone Number" required>
+
+        <input type="file" name="resume" accept=".pdf,.doc,.docx" required>
+
+        <button type="submit">Submit Application</button>
+
+    </form>
+
+</body>
+
+</html>
