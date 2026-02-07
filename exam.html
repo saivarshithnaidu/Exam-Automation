@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Online Exam</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 8px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .question {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Backend Developer – Online Exam</h2>
+
+        <label><b>Email:</b></label>
+        <input type="email" id="email" required style="width:100%;padding:8px;"><br><br>
+
+        <div id="questions"></div>
+
+        <button onclick="submitExam()">Submit Exam</button>
+    </div>
+
+    <script>
+        const GET_EXAM_URL = "http://localhost:5678/webhook-test/2b9b662d-7f26-40ba-befb-81f10be689b3";
+        const SUBMIT_EXAM_URL = "http://localhost:5678/webhook-test/2b9b662d-7f26-40ba-befb-81f10be689b3";
+
+        let questionsData = [];
+
+        async function loadExam() {
+            const res = await fetch(GET_EXAM_URL);
+            const data = await res.json();
+            questionsData = data.questions;
+
+            const container = document.getElementById("questions");
+            container.innerHTML = "";
+
+            questionsData.forEach((q, index) => {
+                let html = `<div class="question">
+        <p><b>${index + 1}. ${q.question}</b></p>`;
+
+                for (let key in q.options) {
+                    html += `
+          <label>
+            <input type="radio" name="q${q.id}" value="${key}">
+            ${key}. ${q.options[key]}
+          </label><br>`;
+                }
+
+                html += `</div>`;
+                container.innerHTML += html;
+            });
+        }
+
+        async function submitExam() {
+            const email = document.getElementById("email").value;
+            if (!email) {
+                alert("Please enter email");
+                return;
+            }
+
+            let answers = {};
+            questionsData.forEach(q => {
+                const selected = document.querySelector(`input[name="q${q.id}"]:checked`);
+                answers[q.id] = selected ? selected.value : null;
+            });
+
+            await fetch(SUBMIT_EXAM_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: email,
+                    answers: answers
+                })
+            });
+
+            alert("Exam submitted successfully!");
+        }
+
+        loadExam();
+    </script>
+</body>
+
+</html>
