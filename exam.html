@@ -1,117 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Online Exam</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: auto;
-            background: #fff;
-            padding: 25px;
-            border-radius: 8px;
-        }
-
-        h2 {
-            text-align: center;
-        }
-
-        .question {
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-        }
-
-        button {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 12px;
-            width: 100%;
-            font-size: 16px;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Online Exam</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 8px;
+    }
+    h2 {
+      text-align: center;
+    }
+    .question {
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 12px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
-    <div class="container">
-        <h2>Backend Developer – Online Exam</h2>
+  <div class="container">
+    <h2>Backend Developer – Online Exam</h2>
 
-        <label><b>Email:</b></label>
-        <input type="email" id="email" required style="width:100%;padding:8px;"><br><br>
+    <!-- Candidate Email -->
+    <label><b>Email:</b></label>
+    <input type="email" id="email" required style="width:100%;padding:8px;"><br><br>
 
-        <div id="questions"></div>
+    <!-- Questions -->
+    <div id="questions"></div>
 
-        <button onclick="submitExam()">Submit Exam</button>
-    </div>
+    <button onclick="submitExam()">Submit Exam</button>
+  </div>
 
-    <script>
-        const GET_EXAM_URL = "http://localhost:5678/webhook-test/2b9b662d-7f26-40ba-befb-81f10be689b3";
-        const SUBMIT_EXAM_URL = "http://localhost:5678/webhook-test/2b9b662d-7f26-40ba-befb-81f10be689b3";
+<script>
+  /* ================================
+     CONFIGURATION (CHANGE ONLY THIS)
+     ================================ */
 
-        let questionsData = [];
+  const BASE_API = "https://ai-exam-sai.loca.lt"; 
+  // 👆 this is your FIXED LocalTunnel URL
 
-        async function loadExam() {
-            const res = await fetch(GET_EXAM_URL);
-            const data = await res.json();
-            questionsData = data.questions;
+  const GET_EXAM_URL = `${BASE_API}/webhook/get-exam`;
+  const SUBMIT_EXAM_URL = `${BASE_API}/webhook/submit-exam`;
 
-            const container = document.getElementById("questions");
-            container.innerHTML = "";
+  /* ================================ */
 
-            questionsData.forEach((q, index) => {
-                let html = `<div class="question">
-        <p><b>${index + 1}. ${q.question}</b></p>`;
+  let questionsData = [];
 
-                for (let key in q.options) {
-                    html += `
-          <label>
-            <input type="radio" name="q${q.id}" value="${key}">
-            ${key}. ${q.options[key]}
-          </label><br>`;
-                }
+  // Load exam questions from n8n
+  async function loadExam() {
+    try {
+      const response = await fetch(GET_EXAM_URL);
+      const data = await response.json();
 
-                html += `</div>`;
-                container.innerHTML += html;
-            });
+      questionsData = data.questions;
+
+      const container = document.getElementById("questions");
+      container.innerHTML = "";
+
+      questionsData.forEach((q, index) => {
+        let html = `<div class="question">
+          <p><b>${index + 1}. ${q.question}</b></p>`;
+
+        for (let key in q.options) {
+          html += `
+            <label>
+              <input type="radio" name="q${q.id}" value="${key}">
+              ${key}. ${q.options[key]}
+            </label><br>`;
         }
 
-        async function submitExam() {
-            const email = document.getElementById("email").value;
-            if (!email) {
-                alert("Please enter email");
-                return;
-            }
+        html += `</div>`;
+        container.innerHTML += html;
+      });
 
-            let answers = {};
-            questionsData.forEach(q => {
-                const selected = document.querySelector(`input[name="q${q.id}"]:checked`);
-                answers[q.id] = selected ? selected.value : null;
-            });
+    } catch (err) {
+      alert("Failed to load exam questions");
+      console.error(err);
+    }
+  }
 
-            await fetch(SUBMIT_EXAM_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    email: email,
-                    answers: answers
-                })
-            });
+  // Submit exam answers to n8n
+  async function submitExam() {
+    const email = document.getElementById("email").value;
 
-            alert("Exam submitted successfully!");
-        }
+    if (!email) {
+      alert("Please enter your email");
+      return;
+    }
 
-        loadExam();
-    </script>
+    let answers = {};
+    questionsData.forEach(q => {
+      const selected = document.querySelector(`input[name="q${q.id}"]:checked`);
+      answers[q.id] = selected ? selected.value : null;
+    });
+
+    try {
+      await fetch(SUBMIT_EXAM_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email,
+          answers: answers
+        })
+      });
+
+      alert("Exam submitted successfully!");
+    } catch (err) {
+      alert("Error submitting exam");
+      console.error(err);
+    }
+  }
+
+  // Auto load exam on page open
+  loadExam();
+</script>
+
 </body>
-
 </html>
